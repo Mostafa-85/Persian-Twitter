@@ -542,9 +542,9 @@ class LikeCount(APIView):
         except Post.DoesNotExist:
             return Response({"error": "پست یافت نشد!!!"}, status=status.HTTP_404_NOT_FOUND)
 
+        A='DS'
         like_count = post.likes.count()
         return Response({"likes": like_count}, status=status.HTTP_200_OK)
-
 
 
 
