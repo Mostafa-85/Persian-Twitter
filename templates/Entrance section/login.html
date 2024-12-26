@@ -1,9 +1,0 @@
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }} <!-- نمایش فیلدهای فرم به صورت پاراگراف -->
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
-<a href="{% url 'register' %}">حساب کاربری ندارید؟؟؟</a>
-{% for message in messages %}
-    <p>{{ message }}</p>
-{% endfor %}
