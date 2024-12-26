@@ -89,11 +89,11 @@ WSGI_APPLICATION = 'Twink1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # نام دیتابیس که ساختید
-        'USER': 'postgres',  # نام کاربری دیتابیس
-        'PASSWORD': 'mostafa.1385',  # رمز عبور دیتابیس
-        'HOST': 'localhost',  # یا آدرس سرور دیتابیس
-        'PORT': '5432',  # پورت پیش‌فرض PostgreSQL
+        'NAME': 'postgres',
+        'USER': 'root',
+        'PASSWORD': 'iNsvT3DOJ2Zq8TBcWfk7i6Bd',
+        'HOST': 'persian-twiter',
+        'PORT': '5432',
     }
 }
 
