@@ -77,7 +77,7 @@ class CustomLoginAPIView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
         # بررسی که آیا کاربر قبلاً لاگین کرده است و توکن رفرش معتبر است
-        refresh_token = request.data.get("refresh_token")
+        refresh_token = request.data.get("refresh")
 
         if refresh_token:
             try:
@@ -156,9 +156,10 @@ class UserProfileAPIView(APIView):
 
         # برگرداندن اطلاعات پروفایل کاربر به همراه فالورها، فالوینگ‌ها و پست‌ها
         return Response({
+            "id":user_profile.id,
             "username": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
+            "first_name": user_profile.first_name,
+            "last_name": user_profile.last_name,
             "email": user.email,
             "bio": user_profile.bio,
             "profile_picture": user_profile.profile_picture.url if user_profile.profile_picture else None,
