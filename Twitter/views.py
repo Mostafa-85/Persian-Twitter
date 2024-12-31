@@ -1,16 +1,20 @@
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import UserProfile, Connection,User,Post,Like,Comment,Hashtag
-from .Serializer import UserProfileSerializer,  CradPostSerializer, CreatePostSerializer,CommentSerializer
+from .models import UserProfile, Connection, User, Post, Like, Comment, Hashtag, ViewPost
+from .Serializer import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.pagination import LimitOffsetPagination
 import re
+from drf_yasg import openapi
+
 
 def extract_hashtags(content):
     return re.findall(r"#(\w+)", content)  # جستجوی کلمات با # در متن
@@ -19,7 +23,9 @@ def extract_hashtags(content):
 
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
-
+    @swagger_auto_schema(
+        request_body=UserRejisterDTO
+    )
     def post(self, request):
 
         refresh_token = request.data.get("refresh_token")
@@ -75,7 +81,12 @@ class RegisterAPIView(APIView):
 
 class CustomLoginAPIView(APIView):
     permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        request_body=UserLoginDTO
+    )
     def post(self, request):
+
         # بررسی که آیا کاربر قبلاً لاگین کرده است و توکن رفرش معتبر است
         refresh_token = request.data.get("refresh")
 
@@ -96,6 +107,7 @@ class CustomLoginAPIView(APIView):
                 return Response({
                     'detail': ''
                 }, status=status.HTTP_400_BAD_REQUEST)
+
 
         # گرفتن نام کاربری و رمز عبور از درخواست
         username = request.data.get("username")
@@ -123,6 +135,9 @@ class CustomLoginAPIView(APIView):
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        request_body=LogoutDTO
+    )
     def post(self, request):
         # گرفتن توکن رفرش از هدر درخواست
         try:
@@ -169,6 +184,9 @@ class UserProfileAPIView(APIView):
             "posts": list(user_posts)
         }, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        request_body=UserProfileDTO
+    )
     def put(self, request):
         user = request.user  # کاربر لاگین شده را می‌گیریم
 
@@ -184,7 +202,8 @@ class UserProfileAPIView(APIView):
         last_name = request.data.get('last_name', user_profile.last_name)
         bio = request.data.get('bio', user_profile.bio)
         type = request.data.get('type', user_profile.type)
-        profile_picture = request.data.get('profile_picture', user_profile.profile_picture)
+        profile_picture = request.FILES.get('profile_picture', user_profile.profile_picture)
+
 
         # به‌روزرسانی پروفایل
         user_profile.first_name = first_name
@@ -323,7 +342,20 @@ class UserConnectionsAPIView(APIView):
 
 class Create_Post(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
+    @swagger_auto_schema(
+        request_body=PostDTO,
+        manual_parameters=[
+            openapi.Parameter(
+                'post_picture',
+                openapi.IN_FORM,
+                description="تصویر پست",
+                type=openapi.TYPE_FILE,  # نوع داده برای فایل
+                required=False  # اختیاری بودن فیلد
+            )
+        ]
+    )
     def post(self, request):
         try:
             user_profile = UserProfile.objects.get(user=request.user)
@@ -332,12 +364,14 @@ class Create_Post(APIView):
 
         title = request.data.get('title')
         content = request.data.get('content')
+        post_picture = request.FILES.get('post_picture')
 
         if not title or not content:
             return Response({"error": "عنوان و محتوا را خالی گذاشتید!!!"}, status=status.HTTP_400_BAD_REQUEST)
 
-        post = Post.objects.create(user=user_profile, title=title, content=content)
+        post = Post.objects.create(user=user_profile, title=title, content=content, post_picture=post_picture)
         post.save()
+
 
         # استخراج و ذخیره هشتگ‌ها
         hashtags = extract_hashtags(content)
@@ -349,7 +383,7 @@ class Create_Post(APIView):
         return Response({"message": "پست توسط کاربر ایجاد شد", "post": serialized_post}, status=status.HTTP_201_CREATED)
 
 
-class  Crud_Post(APIView):
+class  Edit_Post(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, post_id):
@@ -364,6 +398,9 @@ class  Crud_Post(APIView):
         post.delete()
         return Response({"message": "پست حذف شد!!"}, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        request_body=EditPostDTO
+    )
     def put(self, request, post_id):
         try:
             user_profile = UserProfile.objects.get(user=request.user)
@@ -382,6 +419,7 @@ class  Crud_Post(APIView):
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
             return Response({"error": "پستی یافت نشد"}, status=status.HTTP_404_NOT_FOUND)
+        view, created = ViewPost.objects.get_or_create(from_user=request.user.userprofile, post=post)
 
         serialized_post = CradPostSerializer(post).data
         return Response({"post": serialized_post}, status=status.HTTP_200_OK)
@@ -437,7 +475,19 @@ class HashtagPostsAPIView(APIView):
 
 
 class SearchHashtagAPIView(APIView):
-    def get(self, request):
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'query',  # نام پارامتر
+                openapi.IN_QUERY,  # مشخص کردن نوع پارامتر (در اینجا query)
+                description="هشتگ مورد نظر برای جستجو",
+                type=openapi.TYPE_STRING,  # نوع داده
+                required=True  # اجباری بودن پارامتر
+            )
+        ]
+    )
+    def get(self, request,):
         query = request.query_params.get('query')  # دریافت پارامتر query از query string
 
         if not query:
@@ -456,6 +506,9 @@ class SearchHashtagAPIView(APIView):
 class AddComment(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        request_body=PostCommentsDTO
+            )
     def post(self, request, post_id):
         try:
             user_profile = UserProfile.objects.get(user=request.user)

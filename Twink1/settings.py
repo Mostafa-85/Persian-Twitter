@@ -14,6 +14,8 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+from datetime import timedelta
+from dotenv import load_dotenv
 
 
 # Quick-start development settings - unsuitable for production
@@ -23,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ph%q#x!re+m9udhf8)ql-6r*4t@gdm!5f_g+vh%0y-*i-_mb7q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -42,6 +44,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_yasg',
+    'storages',
+
 
 ]
 
@@ -85,18 +90,27 @@ WSGI_APPLICATION = 'Twink1.wsgi.application'
 #         'ENGINE': 'django.db.backends.sqlite3',
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
-
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'root',
+#         'PASSWORD': 'iNsvT3DOJ2Zq8TBcWfk7i6Bd',
+#         'HOST': 'persian-twiter',
+#         'PORT': '5432',
+#     }
+# }
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'root',
-        'PASSWORD': 'iNsvT3DOJ2Zq8TBcWfk7i6Bd',
-        'HOST': 'persian-twiter',
+        'USER': 'postgres',
+        'PASSWORD': 'mostafa.1385',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -160,9 +174,56 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
         'PAGE_SIZE': 10,
+
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,  # این گزینه توکن‌های رفرش را بعد از استفاده در بلک‌لیست قرار می‌دهد
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),  # زمان دلخواه شما
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # زمان دلخواه برای رفرش توکن
+}
+# LIARA_ENDPOINT=<https:/storage.c2.liara.space>
+# LIARA_BUCKET_NAME=<twinkapi>
+# LIARA_ACCESS_KEY=<dv1dashscobmpb65>
+# LIARA_SECRET_KEY=<fb440fe8-6994-4ad4-8886-2de16f214c99>
+# S3 Settings
+
+
+load_dotenv()
+
+LIARA_ENDPOINT    = os.getenv("LIARA_ENDPOINT")
+LIARA_BUCKET_NAME = os.getenv("LIARA_BUCKET_NAME")
+LIARA_ACCESS_KEY  = os.getenv("LIARA_ACCESS_KEY")
+LIARA_SECRET_KEY  = os.getenv("LIARA_SECRET_KEY")
+# S3 Settings Based on AWS (optional)
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_ACCESS_KEY_ID       = LIARA_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY   = LIARA_SECRET_KEY
+AWS_STORAGE_BUCKET_NAME = LIARA_BUCKET_NAME
+AWS_S3_ENDPOINT_URL     = LIARA_ENDPOINT
+AWS_S3_REGION_NAME      = 'us-east-1'
+
+# Django-storages configuration
+STORAGES = {
+  "default": {
+      "BACKEND": "storages.backends.s3.S3Storage",
+  },
+  "staticfiles": {
+      "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+  },
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': "JWT Authorization header using the Bearer scheme. Example: 'Bearer <your_access_token>'",
+        },
+    },
+    'USE_SESSION_AUTH': False,  # غیرفعال کردن احراز هویت بر اساس Session
 }

@@ -68,16 +68,30 @@ class Hashtag(models.Model):
     def __str__(self):
         return self.name
 
+class ViewPost(models.Model):
+    from_user = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='view_posts')
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='views')
+    viewed_at = models.DateTimeField(auto_now_add=True)  # زمان مشاهده
+
+    class Meta:
+        unique_together = ('from_user', 'post')  # هر کاربر تنها یک بار می‌تواند یک پست را مشاهده کند
+
+
 class Post(models.Model):
     user = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='posts')
-    title = models.CharField(max_length=50)  # افزایش محدودیت طول عنوان برای انعطاف بیشتر
-    content = models.TextField(max_length=250)  # حذف محدودیت طول برای محتوای متن
-    hashtags = models.ManyToManyField(Hashtag, related_name="posts",default=None)  # ارتباط چند به چند با هشتگ‌ها
+    title = models.CharField(max_length=50)
+    content = models.TextField(max_length=250)
+    hashtags = models.ManyToManyField('Hashtag', related_name="posts", default=None)
+    post_picture = models.ImageField(upload_to='post_pics/', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
 
+    @property
+    def views_count(self):
+        # شمارش تعداد بازدیدها با استفاده از ViewPost
+        return self.views.count()
     @property
     def likes_count(self):
         # بهبود برای خوانایی و عملکرد

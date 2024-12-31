@@ -53,16 +53,19 @@ class CradPostSerializer(serializers.ModelSerializer):
     comments_count = serializers.IntegerField( read_only=True)  # تعداد کامنت‌ها
     nested_comments = CommentSerializer(many=True, read_only=True)  # کامنت‌های پست
     hashtags = HashtagSerializer(many=True)  # اضافه کردن هشتگ‌ها به پست
-
+    views_count = serializers.IntegerField( read_only=True)
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'hashtags', 'created_at', 'user', 'likes_count', 'comments_count', 'nested_comments']
+        fields = [
+            'id', 'post_picture', 'title', 'content', 'hashtags', 'created_at',
+            'user', 'likes_count', 'comments_count', 'nested_comments', 'views_count'
+        ]
         read_only_fields = ['id', 'user', 'created_at', 'likes_count', 'comments_count']
 
 class CreatePostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content',]
+        fields = ['id', 'title', 'content','post_picture']
         read_only_fields=['id']
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -70,3 +73,44 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ['id', 'post', 'user', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+class UserLoginDTO(serializers.Serializer):
+    username = serializers.CharField(max_length=50)
+    password = serializers.CharField(max_length=20,min_length=8,write_only=True)
+    refresh = serializers.CharField(required=False)
+
+class UserRejisterDTO(serializers.Serializer):
+    username = serializers.CharField(max_length=100)
+    password = serializers.CharField(max_length=20,min_length=8,write_only=True)
+    email = serializers.EmailField(max_length=100)
+    first_name = serializers.CharField(max_length=50,required=False)
+    last_name = serializers.CharField(max_length=50,required=False)
+    refresh = serializers.CharField(required=False)
+
+class LogoutDTO(serializers.Serializer):
+    refresh_token = serializers.CharField(required=True)
+
+class UserProfileDTO(serializers.Serializer):
+    first_name = serializers.CharField(max_length=50,required=False)
+    last_name = serializers.CharField(max_length=50,required=False)
+    bio = serializers.CharField(max_length=200,required=False)
+    type = serializers.BooleanField(required=False)
+    profile_picture = serializers.ImageField(required=False)
+
+class PostDTO(serializers.Serializer):
+    title = serializers.CharField(required=True,max_length=50)
+    content = serializers.CharField(required=True,max_length=250)
+    post_picture = serializers.ImageField(required=False)
+
+class EditPostDTO(serializers.Serializer):
+    content = serializers.CharField(required=True,max_length=250)
+
+class PostCommentsDTO(serializers.Serializer):
+    content = serializers.CharField(required=True,max_length=250)
+    parent_id = serializers.IntegerField(required=False)
+
+
+
+
+
+
