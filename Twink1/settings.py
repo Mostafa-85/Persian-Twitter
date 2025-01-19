@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
     'storages',
-
+    'expelor'
 
 ]
 
@@ -149,7 +149,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # مسیر فایل‌های استاتیک پروژه
+    BASE_DIR / "static",
 ]
 
 MEDIA_URL = '/media/'
@@ -179,17 +179,11 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'BLACKLIST_AFTER_ROTATION': True,  # این گزینه توکن‌های رفرش را بعد از استفاده در بلک‌لیست قرار می‌دهد
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),  # زمان دلخواه شما
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # زمان دلخواه برای رفرش توکن
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
-# LIARA_ENDPOINT=<https:/storage.c2.liara.space>
-# LIARA_BUCKET_NAME=<twinkapi>
-# LIARA_ACCESS_KEY=<dv1dashscobmpb65>
-# LIARA_SECRET_KEY=<fb440fe8-6994-4ad4-8886-2de16f214c99>
-# S3 Settings
-
 
 load_dotenv()
 

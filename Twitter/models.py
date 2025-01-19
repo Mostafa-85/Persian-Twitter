@@ -47,7 +47,7 @@ class Like(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('post', 'user')  # جلوگیری از لایک‌های تکراری توسط یک کاربر
+        unique_together = ('post', 'user')
 
 
 class Comment(models.Model):
@@ -62,16 +62,17 @@ class Comment(models.Model):
 
 
 class Hashtag(models.Model):
-    name = models.CharField(max_length=50, unique=True)  # نام هشتگ
+    name = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
 
+
 class ViewPost(models.Model):
     from_user = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='view_posts')
     post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='views')
-    viewed_at = models.DateTimeField(auto_now_add=True)  # زمان مشاهده
+    viewed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('from_user', 'post')  # هر کاربر تنها یک بار می‌تواند یک پست را مشاهده کند
@@ -88,18 +89,27 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+    def can_view(self, viewer):
+        """
+        بررسی می‌کند آیا کاربر می‌تواند این پست را ببیند یا خیر.
+        """
+        if self.user.type == False:  # حساب عمومی
+            return True
+        elif self.user.followers.filter(id=viewer.id).exists():  # اگر کاربر فالوور باشد
+            return True
+        return False
+
     @property
     def views_count(self):
-        # شمارش تعداد بازدیدها با استفاده از ViewPost
         return self.views.count()
     @property
     def likes_count(self):
-        # بهبود برای خوانایی و عملکرد
+
         return self.likes.count()
 
     @property
     def comments_count(self):
-        # بهبود برای خوانایی و عملکرد
+
         return self.comments.count()
 
     @property
@@ -108,7 +118,42 @@ class Post(models.Model):
         return self.comments.filter(parent=None)
 
 
+class FollowRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+    from_user = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='sent_follow_requests')
+    to_user = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='received_follow_requests')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['from_user', 'to_user'], name='unique_follow_request')
+        ]
 
+
+class Notification(models.Model):
+    STATUS_CHOICES = [
+        ('follow_request', 'Follow Request'),
+        ('comment_to_post', 'Comment to Post'),
+        ('reply_to_comment', 'Reply to Comment'),
+        ('likes_for_post', 'Likes for Post'),
+    ]
+    user = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey('UserProfile', on_delete=models.CASCADE, related_name='notifications_actor')
+    target = models.CharField(max_length=255, null=True, blank=True)
+    target_id = models.PositiveIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    is_read = models.BooleanField(default=False)
+    message = models.CharField(max_length=255, null=True, blank=True)
+    class Meta:
+        ordering = ['-created_at']  # مرتب‌سازی پیش‌فرض
+
+    def __str__(self):
+        return f"Notification ({self.status}) for {self.user}"
 
 
 

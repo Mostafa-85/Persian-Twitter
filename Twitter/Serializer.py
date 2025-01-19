@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile, Connection,Post,Like,Comment,Hashtag
+from .models import UserProfile, Connection, Post, Like, Comment, Hashtag, Notification,FollowRequest
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -8,18 +8,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)  # نمایش اطلاعات جزئی‌تر از User
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = UserProfile
         fields = ['id', 'user', 'last_name', 'first_name', 'bio', 'type', 'status', 'profile_picture']
-        read_only_fields = ['id', 'user']  # مشخص کردن فیلدهای فقط خواندنی
+        read_only_fields = ['id', 'user']
 
 class ConnectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Connection
         fields = ['id', 'from_user', 'to_user']
-        read_only_fields = ['id', 'from_user']  # از تغییر `from_user` جلوگیری می‌کنیم
+        read_only_fields = ['id', 'from_user']
 
     def validate(self, data):
         """ولیدیشن برای جلوگیری از دنبال کردن خود"""
@@ -48,11 +48,11 @@ class HashtagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class CradPostSerializer(serializers.ModelSerializer):
-    user = UserProfileSerializer(read_only=True)  # مشخصات سازنده پست
-    likes_count = serializers.IntegerField( read_only=True)  # تعداد لایک‌ها
-    comments_count = serializers.IntegerField( read_only=True)  # تعداد کامنت‌ها
-    nested_comments = CommentSerializer(many=True, read_only=True)  # کامنت‌های پست
-    hashtags = HashtagSerializer(many=True)  # اضافه کردن هشتگ‌ها به پست
+    user = UserProfileSerializer(read_only=True)
+    likes_count = serializers.IntegerField( read_only=True)
+    comments_count = serializers.IntegerField( read_only=True)
+    nested_comments = CommentSerializer(many=True, read_only=True)
+    hashtags = HashtagSerializer(many=True)
     views_count = serializers.IntegerField( read_only=True)
     class Meta:
         model = Post
@@ -73,6 +73,21 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ['id', 'post', 'user', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+class NotificationsSerializer(serializers.ModelSerializer):
+    actor = UserProfileSerializer()
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'status', 'actor', 'target', 'target_id', 'created_at', 'is_read']
+
+class FollowRequestSerializer(serializers.ModelSerializer):
+    from_user_name = serializers.CharField(source='from_user.user.username', read_only=True)
+    class Meta:
+        model = FollowRequest
+        fields = ['id', 'from_user', 'from_user_name', 'status', 'created_at']
+
 
 class UserLoginDTO(serializers.Serializer):
     username = serializers.CharField(max_length=50)
@@ -108,7 +123,6 @@ class EditPostDTO(serializers.Serializer):
 class PostCommentsDTO(serializers.Serializer):
     content = serializers.CharField(required=True,max_length=250)
     parent_id = serializers.IntegerField(required=False)
-
 
 
 
