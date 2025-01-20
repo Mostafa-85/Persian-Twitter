@@ -21,7 +21,7 @@ class UserProfile(models.Model):
     type = models.BooleanField(choices=TYPE_CHOICES,default=False)
     status = models.BooleanField( choices=STATUS_CHOICES,default=True)
     profile_picture = models.ImageField(
-        upload_to='profile_pics/', blank=True,default='profile_pics/nody-عکس-پروفایل-مخصوص-واتساپ-؛-؛-1717325475.jpg')
+        upload_to='profile_pics/', blank=True,default='media/profile_pics/nody-عکس-پروفایل-مخصوص-واتساپ-؛-؛-1717325475.jpg')
 
 
     def __str__(self):

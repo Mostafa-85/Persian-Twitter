@@ -104,11 +104,11 @@ WSGI_APPLICATION = 'Twink1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'heather',
         'USER': 'postgres',
-        'PASSWORD': 'mostafa.1385',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'PASSWORD': 'DARI6x6DNIZ5vIFZ',
+        'HOST': 'services.fin1.chabokan.net',
+        'PORT': '47757',
     }
 }
 
